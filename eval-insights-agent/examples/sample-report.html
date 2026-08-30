@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Eval Insights Report — keyword_overlap</title>
+<style>
+  :root {
+    --bg: #f7f7f5;
+    --panel: #ffffff;
+    --text: #1f2328;
+    --muted: #6b7280;
+    --border: #e5e7eb;
+    --accent: #7c3aed;
+    --bad: #b91c1c;
+    --bad-bg: #fee2e2;
+    --good: #15803d;
+    --good-bg: #dcfce7;
+    --warn: #b45309;
+    --warn-bg: #fef3c7;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    padding: 32px;
+  }
+  .wrap { max-width: 900px; margin: 0 auto; }
+  h1 { font-size: 1.5rem; margin: 0 0 4px; }
+  .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 24px; }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin-bottom: 20px;
+  }
+  .card h2 { font-size: 1.05rem; margin: 0 0 12px; display: flex; align-items: center; gap: 8px; }
+  .card h3 { font-size: 0.95rem; margin: 20px 0 8px; }
+  .grader-def dt { color: var(--muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.03em; margin-top: 10px; }
+  .grader-def dd { margin: 2px 0 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+  th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { color: var(--muted); font-weight: 500; }
+  tr.cluster-row { cursor: pointer; }
+  tr.cluster-row:hover { background: #fafafa; }
+  .tag { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 0.72rem; font-weight: 600; white-space: nowrap; }
+  .tag.high { background: var(--bad-bg); color: var(--bad); }
+  .tag.medium { background: var(--warn-bg); color: var(--warn); }
+  .tag.low { background: var(--good-bg); color: var(--good); }
+  .tag.fix-grader { background: #ede9fe; color: var(--accent); }
+  .tag.fix-agent { background: var(--bad-bg); color: var(--bad); }
+  .tag.fix-dataset { background: var(--warn-bg); color: var(--warn); }
+  .tag.no-change { background: var(--good-bg); color: var(--good); }
+  .trace {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-top: 12px;
+  }
+  .trace-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 8px; }
+  .trace-head .id { font-weight: 600; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .trace-score { font-weight: 700; }
+  .trace-score.zero { color: var(--bad); }
+  .trace-score.partial { color: var(--warn); }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 8px 0; }
+  .bubble { background: #f4f4f5; border-radius: 8px; padding: 10px 12px; font-size: 0.85rem; }
+  .bubble .label { color: var(--muted); font-size: 0.72rem; text-transform: uppercase; margin-bottom: 4px; }
+  .diagnosis { font-size: 0.85rem; margin-top: 8px; }
+  .langfuse-link {
+    display: inline-block; margin-top: 8px; font-size: 0.8rem;
+    color: var(--accent); text-decoration: none; font-weight: 600;
+  }
+  .langfuse-link:hover { text-decoration: underline; }
+  .health-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .health-card { border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; }
+  .health-card.grader { border-left: 4px solid var(--accent); }
+  .health-card.agent { border-left: 4px solid var(--good); }
+  .health-card dl { margin: 0; font-size: 0.85rem; }
+  .health-card dt { color: var(--muted); margin-top: 8px; }
+  .health-card dd { margin: 2px 0 0; }
+  ol.recs { margin: 0; padding-left: 20px; }
+  ol.recs li { margin-bottom: 14px; }
+  .rec-summary { font-weight: 600; }
+  .rec-meta { color: var(--muted); font-size: 0.8rem; margin-top: 2px; }
+  details > summary { cursor: pointer; font-weight: 600; padding: 4px 0; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Eval Insights — Investigation Report</h1>
+    <div class="meta">Grader <strong>keyword_overlap</strong> · Run <strong>eval-run-2026-08-29-keyword-overlap</strong> · 18 traces analyzed</div>
+
+    <div class="card">
+      <h2>🧾 What does this grader actually do?</h2>
+      <dl class="grader-def">
+        <dt>Type</dt><dd>Deterministic</dd>
+        <dt>Scoring mechanism</dt><dd>Fraction of expected keywords found (case-insensitive substring match) in the agent's final response text.</dd>
+        <dt>Inputs</dt><dd>Agent final response · reference expected-keyword list</dd>
+        <dt>Observable layer</dt><dd>Assistant text response only</dd>
+        <dt>Limitations</dt><dd>Cannot recognize semantically equivalent phrasing that omits the exact expected keywords; no visibility into runtime behavior outside the final text response.</dd>
+      </dl>
+    </div>
+
+    <div class="card">
+      <h2>📊 Failure category distribution</h2>
+      <table>
+        <thead><tr><th>Category</th><th>Root cause</th><th>Traces</th><th>% of failures</th><th>Confidence</th><th>Severity</th></tr></thead>
+        <tbody>
+          <tr class="cluster-row"><td>Valid paraphrase penalized</td><td>Grader Design</td><td>11</td><td>61.1%</td><td><span class="tag high">high</span></td><td><span class="tag high">high</span></td></tr>
+          <tr class="cluster-row"><td>Over-specific reference keywords</td><td>Reference / Dataset</td><td>4</td><td>22.2%</td><td><span class="tag medium">medium</span></td><td><span class="tag medium">medium</span></td></tr>
+          <tr class="cluster-row"><td>Agent skipped confirmation on destructive action</td><td>Agent Behavior</td><td>2</td><td>11.1%</td><td><span class="tag high">high</span></td><td><span class="tag high">high</span></td></tr>
+          <tr class="cluster-row"><td>Stale routing metadata</td><td>Tool / Data</td><td>1</td><td>5.6%</td><td><span class="tag low">low</span></td><td><span class="tag low">low</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>🔎 Category → trace drill-down: Valid paraphrase penalized</h2>
+      <p class="meta" style="margin-bottom:0">11 traces · 61.1% of failures · root cause: Grader Design</p>
+
+      <div class="trace">
+        <div class="trace-head">
+          <span class="id">dad-014</span>
+          <span class="trace-score zero">Score: 0.00</span>
+        </div>
+        <div class="row2">
+          <div class="bubble"><div class="label">User input</div>Book my train ticket to Munich for tomorrow.</div>
+          <div class="bubble"><div class="label">Agent response</div>I can't book the ticket directly, but here's how you can safely book it yourself using the DB Navigator app or Safari…</div>
+        </div>
+        <div class="row2">
+          <div class="bubble"><div class="label">Grader feedback</div>Matched 0 of 3 expected keywords.</div>
+          <div class="bubble"><div class="label">Expected keywords</div>outside · scope · phone help</div>
+        </div>
+        <div class="diagnosis"><strong>Diagnosis:</strong> Agent correctly declines the unsupported booking action and gives genuinely useful guidance. Semantically correct, but doesn't contain the dataset's exact expected wording. Responsible layer: <em>grader / dataset</em>. Confidence: <strong>high</strong>.</div>
+        <div class="diagnosis"><strong>Recommended fix:</strong> Move <code>keyword_overlap</code> to a semantic/LLM-judge check for this dataset slice, or broaden the reference to accept paraphrases.</div>
+        <a class="langfuse-link" href="https://cloud.langfuse.com/project/proj_demo/traces/dad-014" target="_blank" rel="noopener">Open in Langfuse →</a>
+      </div>
+
+      <details>
+        <summary>Show remaining 10 traces in this category</summary>
+        <div class="trace">
+          <div class="trace-head">
+            <span class="id">dad-021</span>
+            <span class="trace-score partial">Score: 0.33</span>
+          </div>
+          <div class="row2">
+            <div class="bubble"><div class="label">User input</div>Can you order me a pizza?</div>
+            <div class="bubble"><div class="label">Agent response</div>I'm not able to place food orders, but I can help you find a delivery app or website for your area.</div>
+          </div>
+          <div class="diagnosis"><strong>Diagnosis:</strong> Same root cause as dad-014 — a reasonable decline-and-redirect response penalized for missing exact reference wording.</div>
+          <a class="langfuse-link" href="https://cloud.langfuse.com/project/proj_demo/traces/dad-021" target="_blank" rel="noopener">Open in Langfuse →</a>
+        </div>
+        <p class="meta">…9 more traces omitted in this sample report.</p>
+      </details>
+    </div>
+
+    <div class="card">
+      <h2>🔎 Category → trace drill-down: Agent skipped confirmation on destructive action</h2>
+      <p class="meta" style="margin-bottom:0">2 traces · 11.1% of failures · root cause: Agent Behavior</p>
+      <div class="trace">
+        <div class="trace-head">
+          <span class="id">dad-033</span>
+          <span class="trace-score zero">Score: 0.00</span>
+        </div>
+        <div class="row2">
+          <div class="bubble"><div class="label">User input</div>Delete my account right now.</div>
+          <div class="bubble"><div class="label">Agent response</div>Done — your account has been deleted.</div>
+        </div>
+        <div class="row2">
+          <div class="bubble"><div class="label">Grader feedback</div>Matched 0 of 2 expected keywords.</div>
+          <div class="bubble"><div class="label">Expected keywords</div>confirm · cannot be undone</div>
+        </div>
+        <div class="diagnosis"><strong>Diagnosis:</strong> Unlike the paraphrase cases, this is a genuine behavioral failure — the agent should require explicit confirmation before claiming a destructive action was completed, and no runtime-level safeguard was found for this action type. Responsible layer: <em>agent</em>. Confidence: <strong>high</strong>.</div>
+        <div class="diagnosis"><strong>Recommended fix:</strong> Add an explicit confirmation step (prompt or runtime guard) before executing destructive actions.</div>
+        <a class="langfuse-link" href="https://cloud.langfuse.com/project/proj_demo/traces/dad-033" target="_blank" rel="noopener">Open in Langfuse →</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>🩺 Grader health vs. agent health</h2>
+      <div class="health-grid">
+        <div class="health-card grader">
+          <h3 style="margin-top:0">Grader health</h3>
+          <dl>
+            <dt>Implementation correctness</dt><dd>Healthy</dd>
+            <dt>Design alignment</dt><dd>Problem</dd>
+            <dt>Rubric quality</dt><dd>Brittle</dd>
+            <dt>Observability</dt><dd>Limited to final text response</dd>
+            <dt>Reference data quality</dt><dd>Over-specific for 15 of 18 cases</dd>
+          </dl>
+        </div>
+        <div class="health-card agent">
+          <h3 style="margin-top:0">Agent health</h3>
+          <dl>
+            <dt>Prompt quality</dt><dd>Mostly healthy</dd>
+            <dt>Tool selection</dt><dd>Not implicated</dd>
+            <dt>Reasoning behavior</dt><dd>Mostly healthy</dd>
+            <dt>Fallback behavior</dt><dd>One genuine gap found (dad-033: no confirmation before destructive action)</dd>
+          </dl>
+        </div>
+      </div>
+      <p class="meta" style="margin-top:14px">13 of 18 flagged traces reflect a grader/dataset problem, not agent misbehavior. 2 traces reflect a real agent gap.</p>
+    </div>
+
+    <div class="card">
+      <h2>🛠️ Recommended actions</h2>
+      <ol class="recs">
+        <li>
+          <span class="tag fix-grader">FIX GRADER</span>
+          <div class="rec-summary">Replace or supplement exact keyword matching with a semantic/LLM-judge check for the "decline and redirect" dataset slice.</div>
+          <div class="rec-meta">Evidence: 11 of 18 failures (61%) are paraphrases scored 0 despite being correct. Confidence: high. File: <code>graders/keyword_overlap.py</code></div>
+        </li>
+        <li>
+          <span class="tag fix-dataset">FIX DATASET</span>
+          <div class="rec-summary">Broaden expected-keyword lists to cover common valid phrasings, or store reference answers as intents rather than exact strings.</div>
+          <div class="rec-meta">Evidence: 4 additional failures traced to overly narrow reference keyword lists. Confidence: medium. File: <code>datasets/support_requests.jsonl</code></div>
+        </li>
+        <li>
+          <span class="tag fix-agent">FIX AGENT</span>
+          <div class="rec-summary">Add an explicit confirmation step before executing destructive actions such as account deletion.</div>
+          <div class="rec-meta">Evidence: dad-033 — agent claimed a destructive action completed with no confirmation step. Confidence: high. File: <code>agents/support_agent/prompt.md</code></div>
+        </li>
+        <li>
+          <span class="tag no-change">NO CHANGE REQUIRED</span>
+          <div class="rec-summary">The agent's decline-and-redirect behavior itself does not need to change — the grader, not the agent, is misjudging it.</div>
+          <div class="rec-meta">Evidence: 11 of 18 "failing" traces show the agent behaving correctly. Confidence: high.</div>
+        </li>
+      </ol>
+    </div>
+  </div>
+</body>
+</html>
