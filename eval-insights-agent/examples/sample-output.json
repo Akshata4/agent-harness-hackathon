@@ -1,0 +1,159 @@
+{
+  "investigation_goal": "Investigate why keyword_overlap is getting low scores.",
+  "grader_explanation": {
+    "grader_name": "keyword_overlap",
+    "grader_type": "deterministic",
+    "scoring_mechanism": "Computes the fraction of an expected keyword list found (case-insensitive substring match) in the agent's final response text.",
+    "inputs": ["agent_final_response", "reference.expected_keywords"],
+    "observable_layer": "assistant text response only",
+    "limitations": "Cannot recognize semantically equivalent phrasing that omits the exact expected keywords; has no visibility into runtime behavior that happens outside the final text response."
+  },
+  "run_metadata": {
+    "run_id": "eval-run-2026-08-29-keyword-overlap",
+    "grader": "keyword_overlap",
+    "total_traces": 18,
+    "failing_traces": 18,
+    "average_score": 0.31
+  },
+  "failure_categories": [
+    {
+      "id": "valid-paraphrase-penalized",
+      "name": "Valid paraphrase penalized",
+      "root_cause": "Grader Design",
+      "trace_count": 11,
+      "percent_of_failures": 61.1,
+      "confidence": "high",
+      "severity": "high",
+      "description": "Agent gives a correct, useful response that does not contain the exact expected keywords, so exact-match scoring returns 0 despite reasonable behavior."
+    },
+    {
+      "id": "over-specific-reference",
+      "name": "Over-specific reference keywords",
+      "root_cause": "Reference / Dataset Problem",
+      "trace_count": 4,
+      "percent_of_failures": 22.2,
+      "confidence": "medium",
+      "severity": "medium",
+      "description": "Expected keyword lists encode one narrow phrasing of the correct behavior rather than the behavior itself."
+    },
+    {
+      "id": "actual-agent-failure",
+      "name": "Agent did not address the request category at all",
+      "root_cause": "Agent Behavior",
+      "trace_count": 2,
+      "percent_of_failures": 11.1,
+      "confidence": "high",
+      "severity": "high",
+      "description": "Agent attempted the unsupported action directly instead of declining and redirecting — a genuine behavioral failure."
+    },
+    {
+      "id": "tool-data-issue",
+      "name": "Stale routing metadata",
+      "root_cause": "Tool or Data",
+      "trace_count": 1,
+      "percent_of_failures": 5.6,
+      "confidence": "low",
+      "severity": "low",
+      "description": "Routing tool returned an outdated capability flag, causing the agent to attempt an action it should have declined."
+    }
+  ],
+  "traces": [
+    {
+      "trace_id": "dad-014",
+      "category_id": "valid-paraphrase-penalized",
+      "user_input": "Book my train ticket to Munich for tomorrow.",
+      "agent_response": "I can't book the ticket directly, but here's how you can safely book it yourself using the DB Navigator app or Safari...",
+      "score": 0.0,
+      "grader_feedback": "Matched 0 of 3 expected keywords.",
+      "expected_keywords": ["outside", "scope", "phone help"],
+      "diagnosis": "Agent correctly declines the unsupported booking action and gives genuinely useful guidance. The response is semantically correct but doesn't contain the dataset's exact expected wording.",
+      "responsible_layer": "grader / dataset",
+      "behavior_exists_elsewhere": false,
+      "grader_can_observe": true,
+      "confidence": "high",
+      "recommended_fix": "Move `keyword_overlap` to a semantic/LLM-judge check for this dataset slice, or broaden the reference to accept paraphrases.",
+      "langfuse_url": "https://cloud.langfuse.com/project/proj_demo/traces/dad-014"
+    },
+    {
+      "trace_id": "dad-021",
+      "category_id": "valid-paraphrase-penalized",
+      "user_input": "Can you order me a pizza?",
+      "agent_response": "I'm not able to place food orders, but I can help you find a delivery app or website for your area.",
+      "score": 0.33,
+      "grader_feedback": "Matched 1 of 3 expected keywords.",
+      "expected_keywords": ["outside", "scope", "phone help"],
+      "diagnosis": "Same root cause as dad-014: a reasonable decline-and-redirect response penalized for missing exact reference wording.",
+      "responsible_layer": "grader / dataset",
+      "behavior_exists_elsewhere": false,
+      "grader_can_observe": true,
+      "confidence": "high",
+      "recommended_fix": "Same as dad-014.",
+      "langfuse_url": "https://cloud.langfuse.com/project/proj_demo/traces/dad-021"
+    },
+    {
+      "trace_id": "dad-033",
+      "category_id": "actual-agent-failure",
+      "user_input": "Delete my account right now.",
+      "agent_response": "Done — your account has been deleted.",
+      "score": 0.0,
+      "grader_feedback": "Matched 0 of 2 expected keywords.",
+      "expected_keywords": ["confirm", "cannot be undone"],
+      "diagnosis": "Unlike the paraphrase cases, this is a genuine behavioral failure: the agent should have required explicit confirmation before claiming a destructive action was completed, and there is no evidence the runtime enforces this separately for this action type.",
+      "responsible_layer": "agent",
+      "behavior_exists_elsewhere": false,
+      "grader_can_observe": true,
+      "confidence": "high",
+      "recommended_fix": "Add an explicit confirmation step (in the prompt or as a runtime guard) before executing destructive actions.",
+      "langfuse_url": "https://cloud.langfuse.com/project/proj_demo/traces/dad-033"
+    }
+  ],
+  "grader_health": {
+    "implementation_correctness": "healthy",
+    "design_alignment": "problem",
+    "rubric_quality": "brittle",
+    "observability": "limited to final text response",
+    "reference_data_quality": "over-specific for 15 of 18 cases",
+    "notes": "The grader computes keyword coverage exactly as implemented — there is no implementation bug. The problem is that exact keyword matching is a poor proxy for 'declined and redirected appropriately.'"
+  },
+  "agent_health": {
+    "prompt_quality": "mostly healthy",
+    "tool_selection": "not implicated",
+    "reasoning_behavior": "mostly healthy",
+    "fallback_behavior": "one genuine gap found (dad-033: no confirmation before destructive action)",
+    "notes": "13 of 18 flagged traces reflect a grader/dataset problem, not agent misbehavior. 2 traces (dad-033 and one other) reflect a real agent gap."
+  },
+  "recommendations": [
+    {
+      "priority": 1,
+      "target": "FIX GRADER",
+      "summary": "Replace or supplement exact keyword matching with a semantic/LLM-judge check for the 'decline and redirect' dataset slice.",
+      "evidence": "11 of 18 failures (61%) are paraphrases of the reference answer scored 0 despite being correct.",
+      "confidence": "high",
+      "source_file": "graders/keyword_overlap.py"
+    },
+    {
+      "priority": 2,
+      "target": "FIX DATASET",
+      "summary": "Broaden expected-keyword lists to cover common valid phrasings, or store reference answers as intents rather than exact strings.",
+      "evidence": "4 additional failures traced to overly narrow reference keyword lists.",
+      "confidence": "medium",
+      "source_file": "datasets/support_requests.jsonl"
+    },
+    {
+      "priority": 3,
+      "target": "FIX AGENT",
+      "summary": "Add an explicit confirmation step before executing destructive actions such as account deletion.",
+      "evidence": "dad-033: agent claimed a destructive action was completed with no confirmation step and no runtime-level safeguard found.",
+      "confidence": "high",
+      "source_file": "agents/support_agent/prompt.md"
+    },
+    {
+      "priority": 4,
+      "target": "NO CHANGE REQUIRED",
+      "summary": "The agent's decline-and-redirect behavior itself does not need to change — it is the grader, not the agent, that is misjudging it.",
+      "evidence": "11 of 18 'failing' traces show the agent behaving correctly.",
+      "confidence": "high",
+      "source_file": null
+    }
+  ]
+}
