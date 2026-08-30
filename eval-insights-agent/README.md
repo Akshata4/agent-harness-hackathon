@@ -1,3 +1,4 @@
+<img width="1536" height="1024" alt="ChatGPT Image Aug 29, 2026, 05_40_31 PM" src="https://github.com/user-attachments/assets/0d0fdd04-a110-4fdf-8772-3879e581a847" />
 # 🔍 Eval Insights
 
 ### Autonomous Root-Cause Analysis for AI Agent Evaluations
